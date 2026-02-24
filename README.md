@@ -1,4 +1,4 @@
-# 🔎 Network Traffic Analysis & Protocol Investigation Using Wireshark
+#  Network Traffic Analysis & Protocol Investigation Using Wireshark
 
 ## 📌 Executive Summary
 
