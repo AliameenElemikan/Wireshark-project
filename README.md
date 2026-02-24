@@ -1,64 +1,235 @@
-# Wireshark Network Traffic Investigation (DNS + HTTP + TLS)
+# 🔎 Network Traffic Analysis & Protocol Investigation Using Wireshark
 
-## Overview
-This project demonstrates basic packet capture and investigation skills using Wireshark.
-The goal is to capture normal browsing traffic in a controlled setting and analyze:
-- DNS queries and responses
-- HTTP request/response behavior (if present)
-- TLS handshake metadata for HTTPS sessions
+## 📌 Executive Summary
 
-## Objectives
-- Capture traffic from a local interface (Wi-Fi/Ethernet)
-- Identify DNS lookups and resolved IP addresses
-- Detect HTTP traffic and extract key fields
-- Analyze TLS handshakes (version, SNI, ciphers)
-- Produce a short investigation-style write-up
+This project demonstrates live network traffic capture and protocol analysis using Wireshark on a Windows system. The objective was to analyze HTTP, DNS, TCP handshake behavior, session termination, and DHCP address assignment in order to understand how network traffic is transmitted, reconstructed, and potentially exposed.
 
-## Tools Used
-- Wireshark (free)
-- A web browser
-- (Optional) nslookup / dig
+The investigation highlights the visibility of unencrypted HTTP traffic, DNS resolution patterns, TCP reliability mechanisms, and DHCP behavior. From a security perspective, this project demonstrates how network metadata and session information can be monitored, reconstructed, and analyzed by defenders — or intercepted by attackers on unsecured networks.
 
-## Ethics / Scope
-Traffic captured is from my own device/network activity in a lab-safe context.
-No credential harvesting, no interception of other users’ traffic.
+---
 
-## Step-by-Step
-1. Install Wireshark
-2. Select the correct interface (Wi-Fi or Ethernet)
-3. Start capture
-4. Generate traffic:
-   - Visit a few websites in your browser
-   - Optional: run `nslookup example.com`
-5. Stop capture after 2–5 minutes
-6. Apply filters and document findings:
-   - DNS: `dns`
-   - HTTP: `http`
-   - TLS handshakes: `tls.handshake`
-7. Save capture file as `.pcapng`
+## 🛠 Tools Used
 
-## Key Filters (Cheat Sheet)
-- `dns`
-- `dns.qry.name contains "google"`
-- `http`
-- `http.request`
-- `tls.handshake`
-- `tcp.port == 443`
-- `ip.addr == x.x.x.x` (filter specific IP)
+- Wireshark
+- Windows Command Prompt
+- Capture Filters
+- Display Filters
+- TCP Stream Reconstruction
 
-## Report Template (What to Document)
-- Time window of capture
-- Top DNS queries observed
-- DNS response IPs for 1–2 domains
-- Any HTTP hosts or URIs observed (if present)
-- TLS handshake notes:
-  - SNI (Server Name Indication)
-  - TLS version
-  - Selected cipher suite
+**Environment:**
+- OS: Windows
+- Network: Local LAN
+- Protocol Focus: HTTP (Port 80), DNS (Port 53), TCP, DHCP
 
-## Project Files (Suggested)
-- `/pcaps/` : saved capture files (small + sanitized)
-- `/report/` : investigation write-up in Markdown
+---
 
-## Disclaimer
-This project is for learning and ethical analysis only. Only capture traffic you are authorized to capture.
+# 🌐 1. HTTP Traffic Analysis (Port 80)
+
+## Objective
+Capture and analyze an HTTP GET request and inspect header data transmitted in plaintext.
+
+## Actions Performed
+
+- Captured traffic using `tcp port 80`
+- Identified:
+  - Source IP address
+  - Destination IP address
+  - Source (ephemeral) port
+  - Destination port (80)
+  - HTTP version (HTTP/1.1)
+- Expanded TCP and IP header fields
+- Inspected transmitted cookies
+- Observed `Connection: Keep-Alive`
+
+## Key Findings
+
+- The HTTP GET request was transmitted in plaintext.
+- All headers, including cookies, were fully visible in Wireshark.
+- Source port was an ephemeral client port.
+- Destination port was 80 (standard HTTP).
+
+## 🔐 Security Implications
+
+Because HTTP is unencrypted, all request headers, cookies, IP addresses, and session metadata are visible to anyone capable of capturing traffic on the same network.
+
+This demonstrates:
+
+- Risk of session hijacking
+- Exposure of cookies in plaintext
+- Interception risks on public Wi-Fi
+- Why HTTPS (TLS encryption) is critical
+
+---
+
+# 🌍 2. DNS Traffic Investigation (Port 53)
+
+## Objective
+Analyze DNS resolution behavior and observe how domain names are translated into IP addresses.
+
+## Actions Performed
+
+- Created capture filter for `port 53`
+- Visited external websites
+- Observed DNS query and response packets
+- Identified resolved IP addresses
+
+## Key Findings
+
+- Multiple DNS packets were generated for a single website visit.
+- DNS requests were broadcast before HTTP traffic began.
+- Domain name resolution occurred before TCP connection establishment.
+
+## 🔐 Security Implications
+
+DNS traffic reveals browsing activity even before a website loads.
+
+This demonstrates:
+
+- How DNS logs can be used in threat hunting
+- How attackers can monitor DNS queries
+- Why DNS filtering is important
+- The role of DNS in detecting malicious domains
+
+DNS monitoring is commonly used in SOC environments to identify command-and-control beaconing and suspicious domain activity.
+
+---
+
+# 🔁 3. TCP Three-Way Handshake & Session Analysis
+
+## Objective
+Break down the TCP connection lifecycle and analyze reliability mechanisms.
+
+## Connection Establishment
+
+Identified:
+- SYN
+- SYN/ACK
+- ACK
+
+Confirmed proper three-way handshake between client and server.
+
+## Data Transfer
+
+- Located HTTP GET request
+- Identified corresponding ACK packets
+- Used SEQ/ACK analysis to confirm acknowledgement behavior
+
+## Connection Termination
+
+Identified:
+- FIN/ACK
+- FIN/ACK response
+- Final ACK
+
+Observed graceful TCP session teardown.
+
+## 🔐 Security Implications
+
+Understanding TCP handshake behavior is critical for detecting:
+
+- SYN flood attacks
+- Abnormal session terminations
+- Session hijacking attempts
+- Incomplete handshakes
+- Suspicious connection resets (RST packets)
+
+The SEQ/ACK analysis demonstrated how TCP ensures reliable data delivery and session integrity.
+
+---
+
+# 🔎 4. TCP Stream Reconstruction
+
+## Objective
+Reconstruct the full client-server conversation.
+
+## Actions Performed
+
+- Used **Follow TCP Stream**
+- Reassembled entire HTTP conversation
+
+## Findings
+
+The full request and response exchange was reconstructed in readable format.
+
+## 🔐 Security Implications
+
+TCP stream reconstruction demonstrates how analysts can:
+
+- Rebuild session activity
+- Inspect transmitted data
+- Recover credentials sent over HTTP
+- Investigate malicious payload delivery
+
+This technique is commonly used in digital forensics and incident response investigations.
+
+---
+
+# 🏠 5. DHCP Analysis
+
+## Objective
+Observe IP address assignment using DHCP.
+
+## Actions Performed
+
+- Released IP address using `ipconfig /release`
+- Renewed IP address using `ipconfig /renew`
+- Captured DHCP traffic
+- Filtered for DHCP packets
+
+## Observed DHCP Process
+
+- DHCP Discover
+- DHCP Offer
+- DHCP Request
+- DHCP ACK
+
+Observed use of IP address `0.0.0.0` during discovery phase.
+
+## 🔐 Security Implications
+
+The presence of 0.0.0.0 reflects a client without an assigned IP during DHCP discovery.
+
+Monitoring DHCP traffic is important for detecting:
+
+- Rogue DHCP servers
+- Network misconfigurations
+- Unauthorized device connections
+- ARP spoofing preparation activity
+
+---
+
+# ⚠️ Overall Security Observations
+
+This investigation demonstrated:
+
+- Plaintext HTTP exposes sensitive data.
+- DNS traffic reveals browsing activity.
+- TCP handshake analysis confirms connection reliability.
+- Cookies transmitted over HTTP are vulnerable.
+- DHCP behavior reveals network configuration details.
+
+From a defensive perspective, this type of analysis is essential for:
+
+- Threat detection
+- Network monitoring
+- Incident response
+- Packet-level forensic investigation
+
+---
+
+# 🎯 Skills Demonstrated
+
+- Packet capture and filtering
+- Protocol inspection (TCP/IP)
+- Port analysis
+- DNS monitoring
+- TCP handshake analysis
+- Session reconstruction
+- DHCP traffic analysis
+- Security risk identification
+
+---
+
+# 🚀 Conclusion
+
+This project demonstrates hands-on network traffic analysis using Wireshark in a Windows environment. The investigation highlights how unencrypted traffic can be inspected, reconstructed, and analyzed — reinforcing the importance of encryption, DNS monitoring, and protocol-level visibility in cybersecurity operations.
