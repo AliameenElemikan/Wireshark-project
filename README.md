@@ -34,7 +34,7 @@ This project focuses on identifying and interpreting network behavior rather tha
 
 To isolate web traffic, a capture filter was applied to collect packets using **TCP port 80**, which corresponds to standard HTTP traffic. This approach allows analysts to focus on specific protocols during an investigation and reduces noise from unrelated network traffic.
 
-![Capture Filter Applied](screenshots/01_capture_filter_port80.png)
+![Capture Filter Applied](01_capture_filter_port80.png)
 
 Applying capture filters is a common technique used in network monitoring environments to efficiently collect relevant traffic during an investigation.
 
@@ -44,7 +44,7 @@ Applying capture filters is a common technique used in network monitoring enviro
 
 After beginning the capture and visiting a website, HTTP packets were identified within the packet list. The **GET request** visible in the Info column represents a client request to retrieve content from a web server.
 
-![HTTP GET Packet List](screenshots/02_http_get_packet_list.png)
+![HTTP GET Packet List](02_http_get_packet_list.png)
 
 Important metadata visible in this view includes:
 
@@ -62,7 +62,7 @@ SOC analysts frequently begin investigations by identifying suspicious or notewo
 
 Expanding the **Hypertext Transfer Protocol** section reveals detailed information contained in the HTTP request headers.
 
-![Expanded HTTP Request](screenshots/03_http_get_expanded.png)
+![Expanded HTTP Request](03_http_get_expanded.png)
 
 This section includes metadata such as:
 
@@ -80,7 +80,7 @@ Because this traffic is transmitted over **HTTP rather than HTTPS**, the entire 
 
 One critical observation during the inspection was the presence of **HTTP cookies transmitted in plaintext**.
 
-![Cookie in Plaintext](screenshots/04_cookie_plaintext.png)
+![Cookie in Plaintext](04_cookie_plaintext.png)
 
 Cookies may contain session identifiers or tracking data used by websites. When transmitted over unencrypted HTTP connections, this information can potentially be intercepted by attackers performing packet sniffing on the same network.
 
@@ -98,7 +98,7 @@ The handshake consists of:
 2. SYN-ACK (server acknowledges)  
 3. ACK (client confirms)
 
-![TCP Handshake](screenshots/05_tcp_handshake.png)
+![TCP Handshake](05_tcp_handshake.png)
 
 Understanding this process allows analysts to identify abnormal connection behavior such as:
 
@@ -112,7 +112,7 @@ Understanding this process allows analysts to identify abnormal connection behav
 
 Wireshark's **SEQ/ACK analysis** feature helps analysts understand how TCP ensures reliable data delivery.
 
-![SEQ ACK Analysis](screenshots/06_seq_ack_analysis.png)
+![SEQ ACK Analysis](06_seq_ack_analysis.png)
 
 This analysis shows that the packet is acknowledging a previously transmitted segment. TCP uses sequence and acknowledgment numbers to verify that all data has been successfully received.
 
@@ -122,7 +122,7 @@ This analysis shows that the packet is acknowledging a previously transmitted se
 
 After data transfer is complete, TCP sessions are gracefully terminated using **FIN/ACK packets**.
 
-![TCP FIN ACK](screenshots/07_tcp_fin_ack.png)
+![TCP FIN ACK](07_tcp_fin_ack.png)
 
 The FIN flag signals the end of the communication session between the client and server.
 
@@ -138,7 +138,7 @@ Analyzing connection termination behavior can help detect anomalies such as:
 
 Wireshark provides a feature called **Follow TCP Stream**, which reconstructs the entire conversation between client and server.
 
-![TCP Stream Reconstruction](screenshots/08_tcp_stream_reconstruction.png)
+![TCP Stream Reconstruction](08_tcp_stream_reconstruction.png)
 
 This allows analysts to view the complete exchange of data in readable format.
 
@@ -156,7 +156,7 @@ This capability is useful during:
 To verify the identity of the system generating the captured traffic, the network configuration was inspected using the Windows command: ipconfig /all
 
 
-![System IP Verification](screenshots/09_system_ip_verification.png)
+![System IP Verification](09_system_ip_verification.png)
 
 This confirms the system's:
 
@@ -175,7 +175,7 @@ The Dynamic Host Configuration Protocol (DHCP) automatically assigns IP addresse
 
 During the investigation, the DHCP exchange process was captured and analyzed.
 
-![DHCP Exchange](screenshots/10_dhcp_exchange.png)
+![DHCP Exchange](10_dhcp_exchange.png)
 
 The DHCP process includes four steps:
 
